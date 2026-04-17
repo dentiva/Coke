@@ -176,7 +176,7 @@ def health():
 
 if STATIC_DIR.exists():
     # Mount built React assets (JS, CSS, images)
-    app.mount("/assets", StaticFiles(directory=STATIC_DIR / "assets"), name="assets")
+    # app.mount("/assets", StaticFiles(directory=STATIC_DIR / "assets"), name="assets")
 
     @app.get("/")
     @app.get("/{full_path:path}")
