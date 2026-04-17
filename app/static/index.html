@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#E8132B" />
+  <title>Coca-Cola · Nielsen RMS Intelligence</title>
+
+  <!-- React + Recharts from CDN — no build step needed -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.13.0/Recharts.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body, #root { height: 100%; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #F4F5F7;
+      -webkit-font-smoothing: antialiased;
+    }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #9CA3AF; }
+    select, input, button, textarea { font-family: inherit; }
+    @keyframes nis-spin { to { transform: rotate(360deg) } }
+    @keyframes nis-fade { from { opacity: 0; transform: translateY(4px) } to { opacity: 1; transform: none } }
+    .fade-in { animation: nis-fade .25s ease }
+    .suggest-btn:hover { border-color: #E8132B !important; color: #E8132B !important; }
+    .nav-item:hover { background: #F4F5F7 !important; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" data-presets="react">
+  const { useState, useEffect, useRef } = React
+  const {
+    LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
+    XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine,
+  } = Recharts
+
+  // ════════════════════════════════════════════════════════════════════
+  //  COCA-COLA BRAND TOKENS
+  // ════════════════════════════════════════════════════════════════════
+  const C = {
+    red: '#E8132B', redDark: '#B8000F', redDeep: '#8C0009',
+    redLight: '#FFF0F1', redMid: '#FFD6DA',
+    white: '#FFFFFF', offWhite: '#FAFAFA', pageBg: '#F4F5F7',
+    ink: '#1A1A1A', inkMid: '#3D3D3D', inkLight: '#6B7280', inkFaint: '#9CA3AF',
+    border: '#E8EAED', borderMid: '#D1D5DB',
+    green: '#15803D', greenBg: '#DCFCE7',
+    amber: '#B45309', amberBg: '#FEF3C7',
+    danger: '#DC2626', dangerBg: '#FEE2E2',
+    chart1: '#E8132B', chart2: '#1D4ED8', chart3: '#F97316',
+    chart4: '#EC4899', chart5: '#9CA3AF', chart6: '#14B8A6',
+  }
+  const PIE_COLORS = [C.chart1, C.chart2, C.chart3, C.chart4, C.chart6, C.chart5]
+
+  // ════════════════════════════════════════════════════════════════════
+  //  API CLIENT
+  // ════════════════════════════════════════════════════════════════════
+  const apiGet = async (path, params) => {
+    const url = new URL('/api' + path, window.location.origin)
+    if (params) Object.entries(params).forEach(([k,v]) => v != null && url.searchParams.set(k, v))
+    const r = await fetch(url); if (!r.ok) throw new Error(await r.text())
+    return r.json()
+  }
+  const apiPost = async (path, body) => {
+    const r = await fetch('/api' + path, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) })
+    if (!r.ok) throw new Error(await r.text())
+    return r.json()
+  }
+
+  // ════════════════════════════════════════════════════════════════════
+  //  SHARED COMPONENTS
+  // ════════════════════════════════════════════════════════════════════
+  const KpiCard = ({ label, value, delta, positiveIsGood=true, accent=false }) => {
+    const d = delta ?? null
+    const isPos = d !== null && d >= 0
+    const good  = d === null ? null : positiveIsGood ? isPos : !isPos
+    const deltaColor = good === null ? C.inkFaint : good ? C.green : C.danger
+    return (
+      <div style={{
+        background: accent ? C.red : C.white,
+        borderRadius: 12, padding: '16px 20px',
+        borderTop: `3px solid ${accent ? C.redDark : C.red}`,
+        boxShadow: '0 1px 4px rgba(0,0,0,0.07)',
+      }}>
+        <div style={{ fontSize: 10, color: accent ? 'rgba(255,255,255,0.75)' : C.inkFaint, fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', marginBottom: 8 }}>{label}</div>
+        <div style={{ fontSize: 26, fontWeight: 800, color: accent ? C.white : C.ink, lineHeight: 1 }}>{value ?? '—'}</div>
+        {d !== null && (
+          <div style={{ fontSize: 12, color: accent ? 'rgba(255,255,255,0.85)' : deltaColor, marginTop: 6, fontWeight: 600 }}>
+            {isPos ? '▲' : '▼'} {Math.abs(d).toFixed(1)} pts vs LY
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  const ChartCard = ({ title, children, style }) => (
+    <div style={{ background: C.white, borderRadius: 12, padding: '18px 20px', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', ...style }}>
+      {title && <div style={{ fontSize: 12, fontWeight: 700, color: C.inkMid, marginBottom: 14, textTransform: 'uppercase', letterSpacing: '.04em' }}>{title}</div>}
+      {children}
+    </div>
+  )
+
+  const SevBadge = ({ severity }) => {
+    const map = { HIGH:[C.dangerBg, C.danger], MEDIUM:[C.amberBg, C.amber], LOW:[C.greenBg, C.green] }
+    const [bg, tc] = map[severity] ?? ['#F3F4F6','#6B7280']
+    return <span style={{ background:bg, color:tc, padding:'3px 10px', borderRadius:4, fontSize:11, fontWeight:700, letterSpacing:'.04em' }}>{severity}</span>
+  }
+
+  const DeltaPill = ({ value, positiveIsGood=true }) => {
+    if (value == null) return <span style={{ color:C.inkFaint }}>—</span>
+    const isPos = value >= 0
+    const good  = positiveIsGood ? isPos : !isPos
+    return <span style={{ color: good ? C.green : C.danger, fontWeight: 600, fontSize: 12 }}>{isPos?'▲':'▼'} {Math.abs(value).toFixed(1)}</span>
+  }
+
+  const Spinner = ({ message='Loading...' }) => (
+    <div style={{ display:'flex', alignItems:'center', gap:12, padding:'40px 0', color:C.inkLight, fontSize:13 }}>
+      <div style={{ width:20, height:20, border:`2px solid ${C.border}`, borderTopColor:C.red, borderRadius:'50%', animation:'nis-spin 0.7s linear infinite' }} />
+      {message}
+    </div>
+  )
+
+  const PageHeader = ({ title, subtitle, right }) => (
+    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:22 }}>
+      <div>
+        <h1 style={{ fontSize:22, fontWeight:800, color:C.ink, letterSpacing:'-.01em' }}>{title}</h1>
+        {subtitle && <p style={{ fontSize:12, color:C.inkLight, marginTop:4 }}>{subtitle}</p>}
+      </div>
+      {right}
+    </div>
+  )
+
+  // ════════════════════════════════════════════════════════════════════
+  //  VIEW 1 — PORTFOLIO OVERVIEW
+  // ════════════════════════════════════════════════════════════════════
+  const Portfolio = ({ period, lyPeriod, zone, onViewAnomalies }) => {
+    const [cur, setCur]   = useState(null)
+    const [ly, setLy]     = useState(null)
+    const [owners, setOwners] = useState([])
+    const [anom, setAnom] = useState([])
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+      if (!period) return
+      setLoading(true)
+      Promise.all([
+        apiGet('/dashboard/portfolio', { period, zone }),
+        lyPeriod ? apiGet('/dashboard/portfolio', { period: lyPeriod, zone }) : null,
+        apiGet('/dashboard/brand-owners', { period, zone }),
+        apiGet('/dashboard/anomalies', { current_period: period }),
+      ]).then(([c, l, o, a]) => { setCur(c); setLy(l); setOwners(o.slice(0,6)); setAnom(a.slice(0,4)) })
+        .finally(() => setLoading(false))
+    }, [period, lyPeriod, zone])
+
+    const d = (a, b) => a != null && b != null ? parseFloat((a-b).toFixed(2)) : null
+    if (loading) return <Spinner message="Loading portfolio..." />
+
+    return (
+      <div className="fade-in">
+        <PageHeader title="TCCC Portfolio Overview" subtitle={`${zone} · ${period} vs ${lyPeriod || 'LY'} · General Trade`} />
+
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(5, 1fr)', gap:14, marginBottom:22 }}>
+          <KpiCard label="TCCC MS Value"       value={cur?.ms_value_pct?.toFixed(1)+'%'} delta={d(cur?.ms_value_pct, ly?.ms_value_pct)} accent />
+          <KpiCard label="TCCC MS Volume"      value={cur?.ms_volume_pct?.toFixed(1)+'%'} delta={d(cur?.ms_volume_pct, ly?.ms_volume_pct)} />
+          <KpiCard label="Avg WD"              value={cur?.avg_wd_pct?.toFixed(1)+'%'}    delta={d(cur?.avg_wd_pct, ly?.avg_wd_pct)} />
+          <KpiCard label="SPPD"                value={cur?.sppd?.toFixed(0)}              delta={d(cur?.sppd, ly?.sppd)} />
+          <KpiCard label="Replenishment Ratio" value={cur?.rr?.toFixed(2)} positiveIsGood={false} />
+        </div>
+
+        <div style={{ display:'grid', gridTemplateColumns:'3fr 2fr', gap:16, marginBottom:18 }}>
+          <ChartCard title="MS Value — Top Brand Owners (%)">
+            <ResponsiveContainer width="100%" height={215}>
+              <BarChart data={owners} barSize={28}>
+                <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false} />
+                <XAxis dataKey="brand_owner" tick={{ fontSize:10, fill:C.inkLight }} interval={0} angle={-12} textAnchor="end" height={44} />
+                <YAxis tick={{ fontSize:11, fill:C.inkLight }} />
+                <Tooltip contentStyle={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:8, fontSize:12 }} formatter={v => [`${v.toFixed(1)}%`, 'MS%']} />
+                <Bar dataKey="ms_pct" radius={[5,5,0,0]}>
+                  {owners.map((_, i) => <Cell key={i} fill={PIE_COLORS[i] ?? C.chart5} />)}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+
+          <ChartCard title={`Share of Market — ${period}`}>
+            <ResponsiveContainer width="100%" height={215}>
+              <PieChart>
+                <Pie data={owners} cx="50%" cy="48%" innerRadius={55} outerRadius={82} dataKey="ms_pct"
+                     label={({ ms_pct }) => `${ms_pct.toFixed(1)}%`} labelLine={false} paddingAngle={2}>
+                  {owners.map((_, i) => <Cell key={i} fill={PIE_COLORS[i] ?? C.chart5} />)}
+                </Pie>
+                <Tooltip contentStyle={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:8, fontSize:12 }} formatter={v => `${v.toFixed(1)}%`} />
+                <Legend wrapperStyle={{ fontSize:11 }} />
+              </PieChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </div>
+
+        <ChartCard title="">
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+            <div style={{ fontSize:12, fontWeight:700, color:C.inkMid, textTransform:'uppercase', letterSpacing:'.04em' }}>
+              Active Anomalies — {anom.filter(a=>a.severity==='HIGH').length} High Priority
+            </div>
+            <button onClick={onViewAnomalies} style={{ fontSize:12, color:C.red, background:'none', border:'none', cursor:'pointer', fontWeight:700 }}>View all →</button>
+          </div>
+          {anom.map((a, i) => (
+            <div key={i} style={{ display:'flex', alignItems:'flex-start', gap:12, padding:'10px 0', borderBottom: i < anom.length-1 ? `1px solid ${C.border}` : 'none' }}>
+              <SevBadge severity={a.severity} />
+              <div style={{ flex:1 }}>
+                <div style={{ fontSize:13, fontWeight:700, color:C.ink }}>{a.type} — <span style={{ color:C.red }}>{a.brand}</span> · {a.zone}</div>
+                <div style={{ fontSize:12, color:C.inkLight, marginTop:2, lineHeight:1.5 }}>{a.description.substring(0,110)}...</div>
+              </div>
+            </div>
+          ))}
+        </ChartCard>
+      </div>
+    )
+  }
+
+  // ════════════════════════════════════════════════════════════════════
+  //  VIEW 2 — BRAND DEEP DIVE
+  // ════════════════════════════════════════════════════════════════════
+  const BrandDive = ({ periods, brands }) => {
+    const [brand, setBrand] = useState('THUMS UP')
+    const [zone, setZone]   = useState('SLMG Total')
+    const [data, setData]   = useState([])
+    const [loading, setLoading] = useState(false)
+    const ZONES = ['SLMG Total','East UP-1','East UP-2','Central UP','West UP','SLMG Bihar']
+
+    useEffect(() => {
+      if (!brand || !periods.length) return
+      setLoading(true)
+      apiGet('/dashboard/brand', { brand, periods: periods.join(','), zone })
+        .then(setData).finally(() => setLoading(false))
+    }, [brand, zone, periods.join(',')])
+
+    const cur  = data[data.length-1] ?? {}
+    const prev = data[data.length-2] ?? {}
+    const d = (a, b) => a != null && b != null ? parseFloat((a-b).toFixed(2)) : null
+
+    const kpis = [
+      { label: 'MS Value', val: cur.ms_value_pct != null ? cur.ms_value_pct.toFixed(1)+'%' : '—', delta: d(cur.ms_value_pct, prev.ms_value_pct) },
+      { label: 'WD%',      val: cur.wd_pct != null ? cur.wd_pct.toFixed(1)+'%' : '—',             delta: d(cur.wd_pct, prev.wd_pct) },
+      { label: 'SPPD',     val: cur.sppd != null ? cur.sppd.toFixed(0) : '—',                     delta: d(cur.sppd, prev.sppd) },
+      { label: 'SAH',      val: cur.sah != null ? cur.sah.toFixed(3) : '—',                       delta: d(cur.sah, prev.sah) },
+      { label: 'RR',       val: cur.rr != null ? cur.rr.toFixed(2) : '—',                         delta: d(cur.rr, prev.rr), positiveIsGood:false },
+    ]
+
+    const selectStyle = { padding:'8px 12px', border:`1px solid ${C.border}`, borderRadius:8, fontSize:13, color:C.ink, background:C.white, fontWeight:600, cursor:'pointer' }
+
+    return (
+      <div className="fade-in">
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:22 }}>
+          <PageHeader title="Brand Deep Dive" subtitle="4-period trend · KPI decomposition" />
+          <div style={{ display:'flex', gap:10, marginTop:4 }}>
+            <select value={brand} onChange={e=>setBrand(e.target.value)} style={selectStyle}>
+              {brands.map(b => <option key={b}>{b}</option>)}
+            </select>
+            <select value={zone} onChange={e=>setZone(e.target.value)} style={{ ...selectStyle, fontWeight:400 }}>
+              {ZONES.map(z => <option key={z}>{z}</option>)}
+            </select>
+          </div>
+        </div>
+
+        {loading ? <Spinner /> : (
+          <React.Fragment>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(5, 1fr)', gap:12, marginBottom:18 }}>
+              {kpis.map(({ label, val, delta, positiveIsGood=true }) => (
+                <div key={label} style={{ background:C.white, borderRadius:12, padding:'14px 18px', borderTop:`3px solid ${C.border}`, boxShadow:'0 1px 3px rgba(0,0,0,0.06)' }}>
+                  <div style={{ fontSize:10, color:C.inkFaint, fontWeight:700, textTransform:'uppercase', letterSpacing:'.07em', marginBottom:6 }}>{label}</div>
+                  <div style={{ fontSize:22, fontWeight:800, color:C.ink }}>{val}</div>
+                  <div style={{ marginTop:5 }}><DeltaPill value={delta} positiveIsGood={positiveIsGood} /></div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
+              <ChartCard title="Market Share Value Trend (%)">
+                <ResponsiveContainer width="100%" height={190}>
+                  <LineChart data={data}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false} />
+                    <XAxis dataKey="period" tick={{ fontSize:11, fill:C.inkLight }} />
+                    <YAxis tick={{ fontSize:11, fill:C.inkLight }} />
+                    <Tooltip contentStyle={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:8, fontSize:12 }} formatter={v => `${v?.toFixed(1)}%`} />
+                    <Line type="monotone" dataKey="ms_value_pct" stroke={C.red} strokeWidth={2.5} dot={{ r:4, fill:C.red, strokeWidth:2, stroke:C.white }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </ChartCard>
+
+              <ChartCard title="WD% — Distribution Quality">
+                <ResponsiveContainer width="100%" height={190}>
+                  <BarChart data={data} barSize={28}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false} />
+                    <XAxis dataKey="period" tick={{ fontSize:11, fill:C.inkLight }} />
+                    <YAxis domain={[0,100]} tick={{ fontSize:11, fill:C.inkLight }} />
+                    <Tooltip contentStyle={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:8, fontSize:12 }} />
+                    <Bar dataKey="wd_pct" fill={C.red} radius={[4,4,0,0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartCard>
+
+              <ChartCard title="SPPD — Velocity">
+                <ResponsiveContainer width="100%" height={190}>
+                  <LineChart data={data}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false} />
+                    <XAxis dataKey="period" tick={{ fontSize:11, fill:C.inkLight }} />
+                    <YAxis tick={{ fontSize:11, fill:C.inkLight }} />
+                    <Tooltip contentStyle={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:8, fontSize:12 }} />
+                    <Line type="monotone" dataKey="sppd" stroke={C.chart2} strokeWidth={2.5} dot={{ r:4, fill:C.chart2, stroke:C.white, strokeWidth:2 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </ChartCard>
+
+              <ChartCard title="Replenishment Ratio (≥0.80 healthy · <0.80 OOS)">
+                <ResponsiveContainer width="100%" height={190}>
+                  <LineChart data={data}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false} />
+                    <XAxis dataKey="period" tick={{ fontSize:11, fill:C.inkLight }} />
+                    <YAxis domain={[0.5, 1.4]} tick={{ fontSize:11, fill:C.inkLight }} />
+                    <Tooltip contentStyle={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:8, fontSize:12 }} />
+                    <ReferenceLine y={0.80} stroke={C.danger} strokeDasharray="5 3" label={{ value:'OOS Risk', fill:C.danger, fontSize:10, position:'insideTopLeft' }} />
+                    <Line type="monotone" dataKey="rr" stroke={C.green} strokeWidth={2.5} dot={{ r:4, fill:C.green, stroke:C.white, strokeWidth:2 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </ChartCard>
+            </div>
+          </React.Fragment>
+        )}
+      </div>
+    )
+  }
+
+  // ════════════════════════════════════════════════════════════════════
+  //  VIEW 3 — GEOGRAPHY
+  // ════════════════════════════════════════════════════════════════════
+  const Geography = ({ period }) => {
+    const [data, setData] = useState([])
+    const [loading, setLoading] = useState(true)
+    useEffect(() => {
+      if (!period) return
+      setLoading(true)
+      apiGet('/dashboard/geo', { period }).then(setData).finally(() => setLoading(false))
+    }, [period])
+    const chartData = data.filter(r => r.zone !== 'SLMG Total')
+    if (loading) return <Spinner />
+
+    return (
+      <div className="fade-in">
+        <PageHeader title="Geography Roll-up" subtitle={`Zone-level performance · ${period} · General Trade`} />
+
+        <ChartCard title="TCCC MS Value % by Zone" style={{ marginBottom:18 }}>
+          <ResponsiveContainer width="100%" height={230}>
+            <BarChart data={chartData} layout="vertical" barSize={20}>
+              <CartesianGrid strokeDasharray="3 3" stroke={C.border} horizontal={false} />
+              <XAxis type="number" domain={[0,65]} tick={{ fontSize:11, fill:C.inkLight }} />
+              <YAxis dataKey="zone" type="category" width={90} tick={{ fontSize:11, fill:C.inkMid }} />
+              <Tooltip contentStyle={{ background:C.white, border:`1px solid ${C.border}`, borderRadius:8, fontSize:12 }} formatter={v => `${v?.toFixed(1)}%`} />
+              <Bar dataKey="ms_value_pct" fill={C.red} radius={[0,5,5,0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="Zone Scorecard">
+          <table style={{ width:'100%', borderCollapse:'collapse', fontSize:12 }}>
+            <thead>
+              <tr style={{ background:C.red }}>
+                {['Zone','TCCC MS%','Avg WD%','SPPD','RR','Status'].map(h =>
+                  <th key={h} style={{ padding:'11px 16px', color:'rgba(255,255,255,0.92)', fontWeight:700, textAlign:'left', fontSize:11, letterSpacing:'.04em' }}>{h}</th>
+                )}
+              </tr>
+            </thead>
+            <tbody>
+              {data.map((r, i) => {
+                const rrOk   = r.rr != null && r.rr >= 0.80
+                const msGood = r.ms_value_pct != null && r.ms_value_pct > 53
+                const status = !rrOk ? '● OOS Risk' : msGood ? '● On Track' : '● Watch'
+                const sc     = !rrOk ? C.danger : msGood ? C.green : C.amber
+                const sbg    = !rrOk ? C.dangerBg : msGood ? C.greenBg : C.amberBg
+                return (
+                  <tr key={r.zone} style={{ background: i%2===0 ? C.white : C.offWhite, borderBottom:`1px solid ${C.border}` }}>
+                    <td style={{ padding:'11px 16px', fontWeight: r.zone === 'SLMG Total' ? 700 : 400, color: C.ink }}>{r.zone}</td>
+                    <td style={{ padding:'11px 16px', fontWeight:600, color: msGood ? C.green : (r.ms_value_pct != null && r.ms_value_pct < 52 ? C.danger : C.ink) }}>{r.ms_value_pct?.toFixed(1) ?? '—'}%</td>
+                    <td style={{ padding:'11px 16px', color:C.inkMid }}>{r.avg_wd_pct?.toFixed(1) ?? '—'}%</td>
+                    <td style={{ padding:'11px 16px', color:C.inkMid }}>{r.sppd?.toFixed(0) ?? '—'}</td>
+                    <td style={{ padding:'11px 16px', fontWeight:600, color: rrOk ? C.green : C.danger }}>{r.rr?.toFixed(2) ?? '—'}</td>
+                    <td style={{ padding:'11px 16px' }}>
+                      <span style={{ background:sbg, color:sc, padding:'3px 10px', borderRadius:4, fontSize:11, fontWeight:700 }}>{status}</span>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </ChartCard>
+      </div>
+    )
+  }
+
+  // ════════════════════════════════════════════════════════════════════
+  //  VIEW 4 — ANOMALIES
+  // ════════════════════════════════════════════════════════════════════
+  const Anomalies = ({ period }) => {
+    const [data, setData] = useState([])
+    const [loading, setLoading] = useState(true)
+    useEffect(() => {
+      if (!period) return
+      setLoading(true)
+      apiGet('/dashboard/anomalies', { current_period: period }).then(setData).finally(() => setLoading(false))
+    }, [period])
+    if (loading) return <Spinner />
+
+    const high = data.filter(a => a.severity === 'HIGH')
+    const med  = data.filter(a => a.severity === 'MEDIUM')
+
+    return (
+      <div className="fade-in">
+        <PageHeader title="Anomaly Detection" subtitle={`AI white-space scanner · ${high.length} HIGH · ${med.length} MEDIUM · ${period}`} />
+
+        {data.map((a, i) => (
+          <div key={i} style={{
+            background:C.white, borderRadius:12, padding:'18px 22px', marginBottom:14,
+            borderLeft:`4px solid ${a.severity==='HIGH'?C.danger:a.severity==='MEDIUM'?C.amber:C.green}`,
+            boxShadow:'0 1px 4px rgba(0,0,0,0.07)',
+          }}>
+            <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10, flexWrap:'wrap' }}>
+              <SevBadge severity={a.severity} />
+              <span style={{ fontSize:14, fontWeight:800, color:C.ink }}>{a.type}</span>
+              <span style={{ color:C.border }}>|</span>
+              <span style={{ fontSize:13, fontWeight:700, color:C.red }}>{a.brand}</span>
+              <span style={{ color:C.border }}>|</span>
+              <span style={{ fontSize:13, color:C.inkMid }}>{a.zone}</span>
+              <span style={{ marginLeft:'auto', fontSize:11, color:C.inkFaint, background:C.pageBg, padding:'2px 8px', borderRadius:4 }}>{a.period}</span>
+            </div>
+            <p style={{ fontSize:13, color:C.inkMid, lineHeight:1.65, marginBottom:12 }}>{a.description}</p>
+            <div style={{ background:C.greenBg, border:`1px solid ${C.green}30`, borderRadius:8, padding:'10px 16px' }}>
+              <span style={{ fontSize:10, fontWeight:800, color:C.green, textTransform:'uppercase', letterSpacing:'.06em' }}>Recommended Action  </span>
+              <span style={{ fontSize:13, color:C.inkMid }}>{a.action}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  // ════════════════════════════════════════════════════════════════════
+  //  VIEW 5 — AI CHATBOT
+  // ════════════════════════════════════════════════════════════════════
+  const Chatbot = () => {
+    const [msgs, setMsgs] = useState([
+      { role:'assistant', content:"Hello — I'm the Nielsen RMS AI Analyst for SLMG. I answer questions using only the current report snapshot. Ask me about market share, distribution gaps, anomalies, or competitive dynamics." }
+    ])
+    const [input, setInput] = useState('')
+    const [loading, setLoading] = useState(false)
+    const ref = useRef(null)
+
+    useEffect(() => { ref.current?.scrollTo(0, ref.current.scrollHeight) }, [msgs])
+
+    const send = async () => {
+      if (!input.trim() || loading) return
+      const q = input.trim()
+      const history = msgs.slice(-10)
+      setMsgs(prev => [...prev, { role:'user', content:q }])
+      setInput('')
+      setLoading(true)
+      try {
+        const { answer } = await apiPost('/chat', { question: q, history })
+        setMsgs(prev => [...prev, { role:'assistant', content:answer }])
+      } catch (e) {
+        setMsgs(prev => [...prev, { role:'assistant', content:'Unable to reach the AI. Check the ANTHROPIC_API_KEY env var in Railway.' }])
+      }
+      setLoading(false)
+    }
+
+    const SUGGESTIONS = [
+      "Why is Thums Up losing share in East UP-2?",
+      "Which brands are Hidden Gems this month?",
+      "Explain the Campa threat in Central UP",
+      "What is Sprite's replenishment risk in Bihar?",
+      "What does DQI tell us about Kinley?",
+    ]
+
+    return (
+      <div className="fade-in" style={{ display:'flex', flexDirection:'column', height:'calc(100vh - 104px)' }}>
+        <PageHeader title="AI Analyst" subtitle="Answers from report data only · TCCC-first · no hallucination" />
+
+        <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginBottom:16 }}>
+          {SUGGESTIONS.map(q => (
+            <button key={q} onClick={() => setInput(q)} className="suggest-btn" style={{
+              padding:'6px 13px', background:C.white, border:`1px solid ${C.border}`,
+              borderRadius:20, fontSize:12, color:C.inkMid, cursor:'pointer', transition:'all .12s',
+            }}>{q}</button>
+          ))}
+        </div>
+
+        <div ref={ref} style={{ flex:1, overflowY:'auto', display:'flex', flexDirection:'column', gap:10, marginBottom:14, paddingRight:4 }}>
+          {msgs.map((m, i) => (
+            <div key={i} style={{ display:'flex', justifyContent: m.role==='user'?'flex-end':'flex-start' }}>
+              {m.role === 'assistant' && (
+                <div style={{ width:28, height:28, borderRadius:'50%', background:C.red, color:C.white, fontSize:11, fontWeight:800, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, marginRight:8, marginTop:2 }}>AI</div>
+              )}
+              <div style={{
+                maxWidth:'76%', padding:'11px 16px', fontSize:13, lineHeight:1.65, borderRadius:12,
+                background: m.role==='user'?C.red:C.white,
+                color: m.role==='user'?C.white:C.ink,
+                boxShadow: m.role==='assistant'?'0 1px 3px rgba(0,0,0,0.07)':'none',
+                borderBottomRightRadius: m.role==='user'?3:12,
+                borderBottomLeftRadius:  m.role==='assistant'?3:12,
+                whiteSpace:'pre-wrap',
+              }}>{m.content}</div>
+            </div>
+          ))}
+          {loading && (
+            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+              <div style={{ width:28, height:28, borderRadius:'50%', background:C.red, color:C.white, fontSize:11, fontWeight:800, display:'flex', alignItems:'center', justifyContent:'center' }}>AI</div>
+              <div style={{ background:C.white, borderRadius:12, borderBottomLeftRadius:3, padding:'11px 16px', fontSize:13, color:C.inkFaint, boxShadow:'0 1px 3px rgba(0,0,0,0.07)' }}>
+                Analysing report data...
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div style={{ display:'flex', gap:10 }}>
+          <input value={input} onChange={e=>setInput(e.target.value)}
+                 onKeyDown={e => e.key==='Enter' && send()}
+                 placeholder="Ask about market share, distribution, anomalies, competitive trends..."
+                 style={{ flex:1, padding:'12px 16px', border:`1px solid ${C.border}`, borderRadius:10, fontSize:13, color:C.ink, outline:'none', boxShadow:'0 1px 3px rgba(0,0,0,0.06)' }} />
+          <button onClick={send} disabled={loading} style={{
+            padding:'12px 24px', background: loading ? C.inkFaint : C.red, color:C.white,
+            border:'none', borderRadius:10, fontSize:13, fontWeight:700, cursor: loading?'default':'pointer',
+          }}>Send</button>
+        </div>
+      </div>
+    )
+  }
+
+  // ════════════════════════════════════════════════════════════════════
+  //  MAIN APP
+  // ════════════════════════════════════════════════════════════════════
+  const NAV = [
+    { id:'portfolio',  label:'Portfolio',   icon:'◈' },
+    { id:'brand',      label:'Brand Dive',  icon:'◎' },
+    { id:'geo',        label:'Geography',   icon:'◉' },
+    { id:'anomalies',  label:'Anomalies',   icon:'◆' },
+    { id:'chat',       label:'AI Analyst',  icon:'◇' },
+  ]
+
+  const App = () => {
+    const [view, setView] = useState('portfolio')
+    const [periods, setPeriods] = useState([])
+    const [brands, setBrands]   = useState([])
+    const [period, setPeriod]   = useState('')
+    const [lyPeriod, setLyPeriod] = useState('')
+    const [anomalyCount, setAnomalyCount] = useState(0)
+
+    useEffect(() => {
+      Promise.all([apiGet('/meta/periods'), apiGet('/meta/brands', { tccc_only:true })])
+        .then(([p, b]) => {
+          const labels  = p.map(x => x.period_label)
+          const monthly = labels.filter(l => !l.includes('YTD'))
+          setPeriods(labels); setBrands(b)
+          if (monthly.length >= 2) {
+            setPeriod(monthly[monthly.length-1])
+            setLyPeriod(monthly[monthly.length-3] ?? monthly[0])
+          }
+        }).catch(console.error)
+    }, [])
+
+    useEffect(() => {
+      if (period) apiGet('/dashboard/anomalies', { current_period: period })
+        .then(a => setAnomalyCount(a.filter(x => x.severity === 'HIGH').length))
+        .catch(() => {})
+    }, [period])
+
+    return (
+      <div style={{ display:'flex', minHeight:'100vh', background:C.pageBg }}>
+
+        <aside style={{ width:215, flexShrink:0, background:C.white, borderRight:`1px solid ${C.border}`, display:'flex', flexDirection:'column', position:'sticky', top:0, height:'100vh', overflow:'hidden' }}>
+
+          {/* Brand banner */}
+          <div style={{ background:C.red, padding:'20px 20px 18px', position:'relative', overflow:'hidden' }}>
+            <div style={{ position:'absolute', right:-30, top:-30, width:100, height:100, borderRadius:'50%', background:'rgba(255,255,255,0.08)' }} />
+            <div style={{ position:'absolute', right:10, bottom:-40, width:80, height:80, borderRadius:'50%', background:'rgba(255,255,255,0.06)' }} />
+            <div style={{ position:'relative' }}>
+              <div style={{ fontSize:18, fontWeight:900, color:C.white, letterSpacing:'-.02em', lineHeight:1 }}>Coca‑Cola</div>
+              <div style={{ fontSize:10, color:'rgba(255,255,255,0.8)', marginTop:3, fontWeight:500, letterSpacing:'.04em' }}>NIELSEN RMS INTELLIGENCE</div>
+              <div style={{ marginTop:10, display:'inline-block', background:'rgba(255,255,255,0.2)', padding:'3px 8px', borderRadius:4, fontSize:9, color:C.white, fontWeight:700, letterSpacing:'.06em' }}>SLMG PVT. LTD.</div>
+            </div>
+          </div>
+
+          {/* Period selector */}
+          {periods.length > 0 && (
+            <div style={{ padding:'12px 16px', borderBottom:`1px solid ${C.border}` }}>
+              <label style={{ fontSize:9, color:C.inkFaint, fontWeight:700, textTransform:'uppercase', letterSpacing:'.06em', display:'block', marginBottom:5 }}>Current Period</label>
+              <select value={period} onChange={e => setPeriod(e.target.value)}
+                style={{ width:'100%', padding:'6px 10px', border:`1px solid ${C.border}`, borderRadius:6, fontSize:12, color:C.ink, background:C.offWhite, fontWeight:600 }}>
+                {periods.filter(p => !p.includes('YTD')).map(p => <option key={p}>{p}</option>)}
+              </select>
+            </div>
+          )}
+
+          {/* Nav */}
+          <nav style={{ flex:1, padding:'8px 0' }}>
+            {NAV.map(item => {
+              const active = view === item.id
+              return (
+                <button key={item.id} onClick={() => setView(item.id)} className="nav-item" style={{
+                  width:'100%', textAlign:'left', border:'none', cursor:'pointer',
+                  display:'flex', alignItems:'center', gap:10,
+                  padding:'10px 20px',
+                  background: active ? C.redLight : 'transparent',
+                  borderLeft:`3px solid ${active ? C.red : 'transparent'}`,
+                  color: active ? C.red : C.inkLight,
+                  fontSize:13, fontWeight: active ? 700 : 400,
+                  transition:'all .12s',
+                }}>
+                  <span style={{ fontSize:14, opacity: active ? 1 : 0.6 }}>{item.icon}</span>
+                  <span style={{ flex:1 }}>{item.label}</span>
+                  {item.id === 'anomalies' && anomalyCount > 0 && (
+                    <span style={{ background:C.red, color:C.white, borderRadius:10, padding:'1px 7px', fontSize:10, fontWeight:700 }}>{anomalyCount}</span>
+                  )}
+                </button>
+              )
+            })}
+          </nav>
+
+          {/* Footer */}
+          <div style={{ padding:'14px 20px', borderTop:`1px solid ${C.border}` }}>
+            <div style={{ display:'inline-block', marginBottom:6, padding:'2px 7px', background:C.redLight, color:C.red, fontSize:9, fontWeight:700, borderRadius:4, letterSpacing:'.05em' }}>DEMO</div>
+            <div style={{ fontSize:9, color:C.inkFaint, lineHeight:1.7 }}>
+              Synthetic SLMG data · GT only<br/>
+              Concept demonstrator
+            </div>
+          </div>
+        </aside>
+
+        <main style={{ flex:1, overflow:'auto', padding:'28px 32px' }}>
+          {view === 'portfolio' && <Portfolio period={period} lyPeriod={lyPeriod} zone="SLMG Total" onViewAnomalies={() => setView('anomalies')} />}
+          {view === 'brand'     && <BrandDive periods={periods.filter(p => !p.includes('YTD'))} brands={brands} />}
+          {view === 'geo'       && <Geography period={period} />}
+          {view === 'anomalies' && <Anomalies period={period} />}
+          {view === 'chat'      && <Chatbot />}
+        </main>
+      </div>
+    )
+  }
+
+  ReactDOM.createRoot(document.getElementById('root')).render(<App />)
+  </script>
+</body>
+</html>
