@@ -17,7 +17,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 import demo_data as D
-from app.prompts import SYSTEM_PROMPT
+from prompts import SYSTEM_PROMPT
 
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 STATIC_DIR    = Path(__file__).parent / "static"
