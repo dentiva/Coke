@@ -108,7 +108,7 @@ def chat(req: ChatRequest):
             "https://api.anthropic.com/v1/messages",
             headers=_anthropic_headers(),
             json={
-                "model": "claude-sonnet-4-20250514",
+                "model": "claude-sonnet-4-6",
                 "max_tokens": 1500,
                 "system": SYSTEM_PROMPT,
                 "messages": msgs,
@@ -137,7 +137,7 @@ async def chat_stream(req: ChatRequest):
                 "https://api.anthropic.com/v1/messages",
                 headers=_anthropic_headers(),
                 json={
-                    "model": "claude-sonnet-4-20250514",
+                    "model": "claude-sonnet-4-6",
                     "max_tokens": 1500,
                     "stream": True,
                     "system": SYSTEM_PROMPT,
