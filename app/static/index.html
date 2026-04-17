@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#E8132B" />
-  <title>Coca-Cola · Nielsen RMS Intelligence</title>
+  <title>Coca-Cola · Market Intelligence</title>
 
   <!-- jsdelivr CDN — load order: React → ReactDOM → PropTypes → Recharts -->
   <script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
@@ -147,7 +147,7 @@
       if (loading) return h(Spinner, { message: 'Loading portfolio...' });
 
       return h('div', { className: 'fade-in' },
-        h(PageHeader, { title: 'TCCC Portfolio Overview', subtitle: p.zone + ' · ' + p.period + ' vs ' + (p.lyPeriod || 'LY') + ' · General Trade' }),
+        h(PageHeader, { title: 'Portfolio Overview', subtitle: p.zone + ' · ' + p.period + ' vs ' + (p.lyPeriod || 'LY') + ' · General Trade' }),
         h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 14, marginBottom: 22 }},
           h(KpiCard, { label: 'TCCC MS Value', value: cur && cur.ms_value_pct != null ? cur.ms_value_pct.toFixed(1) + '%' : '—', delta: d(cur && cur.ms_value_pct, ly && ly.ms_value_pct), accent: true }),
           h(KpiCard, { label: 'TCCC MS Volume', value: cur && cur.ms_volume_pct != null ? cur.ms_volume_pct.toFixed(1) + '%' : '—', delta: d(cur && cur.ms_volume_pct, ly && ly.ms_volume_pct) }),
@@ -535,7 +535,7 @@
           ),
           h('div', { style: { padding: '14px 20px', borderTop: '1px solid ' + C.border }},
             h('div', { style: { display: 'inline-block', marginBottom: 6, padding: '2px 7px', background: C.redLight, color: C.red, fontSize: 9, fontWeight: 700, borderRadius: 4, letterSpacing: '.05em' }}, 'DEMO'),
-            h('div', { style: { fontSize: 9, color: C.inkFaint, lineHeight: 1.7 }}, 'Synthetic SLMG data · GT only', h('br'), 'Concept demonstrator')
+            h('div', { style: { fontSize: 9, color: C.inkFaint, lineHeight: 1.7 }}, 'Synthetic SLMG data · GT only', h('br'), 'Altius Soft Concept Demonstrator')
           )
         ),
         h('main', { style: { flex: 1, overflow: 'auto', padding: '28px 32px' }},
