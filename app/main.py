@@ -16,7 +16,7 @@ from fastapi.responses import StreamingResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from app import demo_data as D
+import demo_data as D
 from app.prompts import SYSTEM_PROMPT
 
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "")
