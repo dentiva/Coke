@@ -508,7 +508,7 @@
           h('div', { style: { position: 'absolute', right: 40, bottom: -60, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }}),
           h('div', { style: { position: 'relative' }},
             h('div', { style: { fontSize: 10, fontWeight: 800, letterSpacing: '.12em', opacity: 0.85, marginBottom: 8 }}, 'LIVE CONCEPT DEMONSTRATOR'),
-            h('div', { style: { fontSize: 22, fontWeight: 800, letterSpacing: '-.02em', marginBottom: 10 }}, 'NielsenIQ Intelligence Platform'),
+            h('div', { style: { fontSize: 22, fontWeight: 800, letterSpacing: '-.02em', marginBottom: 10 }}, 'NielsenIQ by Altius'),
             h('div', { style: { fontSize: 13, opacity: 0.92, lineHeight: 1.7, maxWidth: 620 }}, 'Turns Nielsen monthly retail measurement into real-time answers — KPIs computed deterministically, anomalies detected automatically, and an AI analyst that answers natural-language questions strictly from the report data.'),
             h('div', { style: { marginTop: 14, display: 'flex', gap: 8, flexWrap: 'wrap' }},
               h('span', { style: { padding: '4px 10px', background: 'rgba(255,255,255,0.18)', borderRadius: 4, fontSize: 11, fontWeight: 700, letterSpacing: '.04em' }}, 'SLMG'),
@@ -574,7 +574,7 @@
             ),
             h('tbody', null,
               [
-                ['Data source',     'Synthetic dict',       'Monthly NielsenIQ Excel upload'],
+                ['Data source',     'Synthetic dict',       'Monthly Nielsen Excel upload'],
                 ['Storage',         'In-memory (no DB)',    'DuckDB (columnar, embedded)'],
                 ['Vector index',    'None (prompt-based)',  'ChromaDB local embeddings'],
                 ['LLM',             'Anthropic API',        'Ollama · llama3.1:8b (local M4 Pro)'],
@@ -627,7 +627,7 @@
         // KPI definitions
         h(Section, { icon: 'ƒ', title: 'KPI Definitions & Formulas' },
           h('div', { style: { fontSize: 13, color: C.inkMid, lineHeight: 1.7, marginBottom: 14 }},
-            'All KPIs are computed from the standard NielsenIQ RMS fact structure. Additive metrics (Sales, Purchases, Stock) sum across geographies. Non-additive metrics (ND, WD, DQI) use weighted averages or are carried as-provided.'
+            'All KPIs are computed from the standard NielsenIQ fact structure. Additive metrics (Sales, Purchases, Stock) sum across geographies. Non-additive metrics (ND, WD, DQI) use weighted averages or are carried as-provided.'
           ),
           h('table', { style: { width: '100%', borderCollapse: 'collapse', fontSize: 12 }},
             h('thead', null,
