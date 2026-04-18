@@ -26,6 +26,8 @@
     .fade-in { animation: nis-fade .25s ease }
     .suggest-btn:hover { border-color: #E8132B !important; color: #E8132B !important; }
     .nav-item:hover { background: #F4F5F7 !important; }
+    .arch-card { transition: all .15s ease; }
+    .arch-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.10) !important; transform: translateY(-1px); }
   </style>
 </head>
 <body>
@@ -458,12 +460,271 @@
       );
     }
 
+    // ═══ VIEW: ABOUT / ARCHITECTURE ═══════════════════════════════════════
+    function About() {
+      var Section = function(props) {
+        return h('div', { style: { background: C.white, borderRadius: 12, padding: '22px 26px', boxShadow: '0 1px 4px rgba(0,0,0,0.07)', marginBottom: 16 }},
+          h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }},
+            h('div', { style: { width: 32, height: 32, borderRadius: 8, background: C.redLight, color: C.red, fontSize: 14, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}, props.icon),
+            h('h2', { style: { fontSize: 15, fontWeight: 800, color: C.ink, letterSpacing: '-.01em' }}, props.title)
+          ),
+          props.children
+        );
+      };
+
+      var InfoRow = function(p) {
+        return h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: p.last ? 'none' : '1px solid ' + C.border }},
+          h('div', { style: { fontSize: 13, color: C.inkMid, fontWeight: 500 }}, p.label),
+          h('div', { style: { fontSize: 13, color: C.ink, fontWeight: 700, textAlign: 'right' }}, p.value)
+        );
+      };
+
+      var Chip = function(p) {
+        return h('span', { style: { display: 'inline-block', padding: '3px 10px', background: (p.color || C.red) + '15', color: p.color || C.red, fontSize: 11, fontWeight: 700, borderRadius: 4, letterSpacing: '.03em', marginRight: 6, marginBottom: 6 }}, p.children);
+      };
+
+      var ArchCard = function(p) {
+        return h('div', { className: 'arch-card', style: { background: p.active ? C.redLight : C.white, border: '1px solid ' + (p.active ? C.red + '40' : C.border), borderRadius: 10, padding: '16px 18px', flex: 1, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }},
+          h('div', { style: { fontSize: 10, fontWeight: 800, color: p.active ? C.red : C.inkFaint, textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}, p.tier),
+          h('div', { style: { fontSize: 14, fontWeight: 700, color: C.ink, marginBottom: 6 }}, p.name),
+          h('div', { style: { fontSize: 11, color: C.inkLight, lineHeight: 1.5 }}, p.detail)
+        );
+      };
+
+      var AnomalyRow = function(p) {
+        return h('tr', { style: { borderBottom: '1px solid ' + C.border }},
+          h('td', { style: { padding: '10px 14px', fontSize: 12, fontWeight: 700, color: C.ink }}, p.type),
+          h('td', { style: { padding: '10px 14px', fontSize: 12, color: C.inkMid, lineHeight: 1.5 }}, p.trigger),
+          h('td', { style: { padding: '10px 14px' }}, h(SevBadge, { severity: p.severity }))
+        );
+      };
+
+      return h('div', { className: 'fade-in' },
+        h(PageHeader, { title: 'About This Platform', subtitle: 'Architecture, methodology, and roadmap from demo to production' }),
+
+        // Hero banner
+        h('div', { style: { background: 'linear-gradient(135deg, ' + C.red + ' 0%, ' + C.redDark + ' 100%)', borderRadius: 12, padding: '24px 28px', marginBottom: 18, color: C.white, position: 'relative', overflow: 'hidden' }},
+          h('div', { style: { position: 'absolute', right: -40, top: -40, width: 160, height: 160, borderRadius: '50%', background: 'rgba(255,255,255,0.07)' }}),
+          h('div', { style: { position: 'absolute', right: 40, bottom: -60, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }}),
+          h('div', { style: { position: 'relative' }},
+            h('div', { style: { fontSize: 10, fontWeight: 800, letterSpacing: '.12em', opacity: 0.85, marginBottom: 8 }}, 'LIVE CONCEPT DEMONSTRATOR'),
+            h('div', { style: { fontSize: 22, fontWeight: 800, letterSpacing: '-.02em', marginBottom: 10 }}, 'Nielsen RMS Intelligence Platform'),
+            h('div', { style: { fontSize: 13, opacity: 0.92, lineHeight: 1.7, maxWidth: 620 }}, 'Turns Nielsen monthly retail measurement into real-time answers — KPIs computed deterministically, anomalies detected automatically, and an AI analyst that answers natural-language questions strictly from the report data.'),
+            h('div', { style: { marginTop: 14, display: 'flex', gap: 8, flexWrap: 'wrap' }},
+              h('span', { style: { padding: '4px 10px', background: 'rgba(255,255,255,0.18)', borderRadius: 4, fontSize: 11, fontWeight: 700, letterSpacing: '.04em' }}, 'SLMG Pvt. Ltd.'),
+              h('span', { style: { padding: '4px 10px', background: 'rgba(255,255,255,0.18)', borderRadius: 4, fontSize: 11, fontWeight: 700, letterSpacing: '.04em' }}, 'General Trade'),
+              h('span', { style: { padding: '4px 10px', background: 'rgba(255,255,255,0.18)', borderRadius: 4, fontSize: 11, fontWeight: 700, letterSpacing: '.04em' }}, 'UP + Bihar'),
+              h('span', { style: { padding: '4px 10px', background: 'rgba(255,255,255,0.18)', borderRadius: 4, fontSize: 11, fontWeight: 700, letterSpacing: '.04em' }}, 'NielsenIQ CBOFBO DDR')
+            )
+          )
+        ),
+
+        // Stats grid
+        h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 18 }},
+          h('div', { style: { background: C.white, borderRadius: 12, padding: '18px 20px', borderTop: '3px solid ' + C.red, boxShadow: '0 1px 4px rgba(0,0,0,0.07)' }},
+            h('div', { style: { fontSize: 10, color: C.inkFaint, fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', marginBottom: 8 }}, 'Dashboard Views'),
+            h('div', { style: { fontSize: 28, fontWeight: 800, color: C.ink, lineHeight: 1 }}, '5'),
+            h('div', { style: { fontSize: 12, color: C.inkLight, marginTop: 6 }}, 'Portfolio · Brand · Geo · Anomalies · Chat')
+          ),
+          h('div', { style: { background: C.white, borderRadius: 12, padding: '18px 20px', borderTop: '3px solid ' + C.chart2, boxShadow: '0 1px 4px rgba(0,0,0,0.07)' }},
+            h('div', { style: { fontSize: 10, color: C.inkFaint, fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', marginBottom: 8 }}, 'KPIs Auto-Computed'),
+            h('div', { style: { fontSize: 28, fontWeight: 800, color: C.ink, lineHeight: 1 }}, '8+'),
+            h('div', { style: { fontSize: 12, color: C.inkLight, marginTop: 6 }}, 'MS · PS · RR · SOTS · SPPD · SAH · DQI · WD')
+          ),
+          h('div', { style: { background: C.white, borderRadius: 12, padding: '18px 20px', borderTop: '3px solid ' + C.amber, boxShadow: '0 1px 4px rgba(0,0,0,0.07)' }},
+            h('div', { style: { fontSize: 10, color: C.inkFaint, fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', marginBottom: 8 }}, 'Anomaly Types'),
+            h('div', { style: { fontSize: 28, fontWeight: 800, color: C.ink, lineHeight: 1 }}, '8'),
+            h('div', { style: { fontSize: 12, color: C.inkLight, marginTop: 6 }}, 'Detected without analyst prompting')
+          ),
+          h('div', { style: { background: C.white, borderRadius: 12, padding: '18px 20px', borderTop: '3px solid ' + C.green, boxShadow: '0 1px 4px rgba(0,0,0,0.07)' }},
+            h('div', { style: { fontSize: 10, color: C.inkFaint, fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', marginBottom: 8 }}, 'SLMG Zones'),
+            h('div', { style: { fontSize: 28, fontWeight: 800, color: C.ink, lineHeight: 1 }}, '5'),
+            h('div', { style: { fontSize: 12, color: C.inkLight, marginTop: 6 }}, '10 units · 28 DDRs at lowest level')
+          )
+        ),
+
+        // Architecture
+        h(Section, { icon: '◆', title: 'Architecture — Current Demo' },
+          h('div', { style: { fontSize: 13, color: C.inkMid, lineHeight: 1.7, marginBottom: 18 }},
+            'A single FastAPI service on Railway serves both the React frontend and the REST API. Synthetic SLMG data is baked in as Python dictionaries for the demo. The AI chatbot routes through the Anthropic Claude API with a full SLMG system prompt containing the current data snapshot, geography hierarchy, KPI definitions, and analytical patterns.'
+          ),
+          h('div', { style: { display: 'flex', gap: 10, alignItems: 'stretch' }},
+            h(ArchCard, { tier: 'Tier 1', name: 'Browser Client', detail: 'React 18 + Recharts loaded via jsdelivr CDN — no build step, single HTML file', active: true }),
+            h('div', { style: { display: 'flex', alignItems: 'center', color: C.inkFaint, fontSize: 20, padding: '0 4px' }}, '→'),
+            h(ArchCard, { tier: 'Tier 2', name: 'FastAPI Service', detail: 'Single Python container on Railway · serves static SPA + /api/* endpoints', active: true }),
+            h('div', { style: { display: 'flex', alignItems: 'center', color: C.inkFaint, fontSize: 20, padding: '0 4px' }}, '→'),
+            h(ArchCard, { tier: 'Tier 3', name: 'Synthetic Data', detail: 'In-memory Python dict · 4 time periods × 16 brands × 6 zones', active: true }),
+            h('div', { style: { display: 'flex', alignItems: 'center', color: C.inkFaint, fontSize: 20, padding: '0 4px' }}, '→'),
+            h(ArchCard, { tier: 'Tier 4', name: 'Anthropic API', detail: 'Claude Sonnet via REST · system prompt contains full SLMG context', active: true })
+          )
+        ),
+
+        // Production roadmap
+        h(Section, { icon: '⟲', title: 'Production Roadmap — What Changes for Go-Live' },
+          h('div', { style: { fontSize: 13, color: C.inkMid, lineHeight: 1.7, marginBottom: 18 }},
+            'The API contract stays identical — only the data layer and LLM swap out. The frontend requires zero changes.'
+          ),
+          h('table', { style: { width: '100%', borderCollapse: 'collapse', fontSize: 13 }},
+            h('thead', null,
+              h('tr', { style: { background: C.pageBg }},
+                ['Layer', 'Demo (today)', 'Production (Phase 1)'].map(function(x) {
+                  return h('th', { key: x, style: { padding: '11px 14px', textAlign: 'left', fontWeight: 700, color: C.inkMid, fontSize: 11, textTransform: 'uppercase', letterSpacing: '.05em' }}, x);
+                })
+              )
+            ),
+            h('tbody', null,
+              [
+                ['Data source',     'Synthetic dict',       'Monthly NielsenIQ Excel upload'],
+                ['Storage',         'In-memory (no DB)',    'DuckDB (columnar, embedded)'],
+                ['Vector index',    'None (prompt-based)',  'ChromaDB local embeddings'],
+                ['LLM',             'Anthropic API',        'Ollama · llama3.1:8b (local M4 Pro)'],
+                ['Ingestion',       'Baked at startup',     'Excel → validate → compute → load'],
+                ['Hosting',         'Railway cloud',        'On-prem or private cloud'],
+                ['Data egress',     'API call to Anthropic','Zero egress — 100% offline'],
+                ['User auth',       'None',                 'SSO (Coke corporate)']
+              ].map(function(row, i) {
+                return h('tr', { key: i, style: { borderBottom: '1px solid ' + C.border }},
+                  h('td', { style: { padding: '11px 14px', fontWeight: 700, color: C.ink }}, row[0]),
+                  h('td', { style: { padding: '11px 14px', color: C.inkMid }}, row[1]),
+                  h('td', { style: { padding: '11px 14px', color: C.green, fontWeight: 600 }}, row[2])
+                );
+              })
+            )
+          )
+        ),
+
+        // Zero hallucination + TCCC lens
+        h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }},
+          h(Section, { icon: '✓', title: 'Zero Hallucination Design' },
+            h('div', { style: { fontSize: 13, color: C.inkMid, lineHeight: 1.75 }},
+              h('strong', { style: { color: C.ink, display: 'block', marginBottom: 8 }}, 'The LLM never calculates numbers.'),
+              'Every KPI is computed in Python — MS, PS, SPPD, SAH, DQI, RR, SOTS. The LLM receives pre-computed figures and only interprets them.',
+              h('div', { style: { marginTop: 14 }},
+                h(Chip, { color: C.green }, 'Python computes'),
+                h(Chip, { color: C.red }, 'LLM interprets'),
+                h(Chip, { color: C.chart2 }, 'RAG retrieves'),
+                h(Chip, { color: C.amber }, 'Source cited')
+              ),
+              h('div', { style: { marginTop: 14, padding: '12px 14px', background: C.greenBg, borderRadius: 8, fontSize: 12, color: C.green, fontWeight: 600, lineHeight: 1.6 }},
+                'If data is not in the retrieved context, the AI will explicitly say "this data point is not in the current report dataset" — never invent a number.'
+              )
+            )
+          ),
+          h(Section, { icon: '⚙', title: 'TCCC-First Lens' },
+            h('div', { style: { fontSize: 13, color: C.inkMid, lineHeight: 1.75 }},
+              h('strong', { style: { color: C.ink, display: 'block', marginBottom: 8 }}, 'Every insight frames TCCC first.'),
+              'The system prompt enforces the analysis order and the insight structure:',
+              h('div', { style: { marginTop: 14, padding: '12px 14px', background: C.pageBg, borderRadius: 8, fontSize: 12, color: C.inkMid, fontFamily: 'ui-monospace, Menlo, monospace', lineHeight: 1.8 }},
+                h('div', null, '1. ', h('span', { style: { color: C.red, fontWeight: 700 }}, 'WHAT'), ' moved — the number'),
+                h('div', null, '2. ', h('span', { style: { color: C.red, fontWeight: 700 }}, 'WHERE'), ' — zone, unit, DDR'),
+                h('div', null, '3. ', h('span', { style: { color: C.red, fontWeight: 700 }}, 'WHY'), ' — root cause'),
+                h('div', null, '4. ', h('span', { style: { color: C.red, fontWeight: 700 }}, 'ACTION'), ' — what SLMG does next')
+              )
+            )
+          )
+        ),
+
+        // KPI definitions
+        h(Section, { icon: 'ƒ', title: 'KPI Definitions & Formulas' },
+          h('div', { style: { fontSize: 13, color: C.inkMid, lineHeight: 1.7, marginBottom: 14 }},
+            'All KPIs are computed from the standard NielsenIQ RMS fact structure. Additive metrics (Sales, Purchases, Stock) sum across geographies. Non-additive metrics (ND, WD, DQI) use weighted averages or are carried as-provided.'
+          ),
+          h('table', { style: { width: '100%', borderCollapse: 'collapse', fontSize: 12 }},
+            h('thead', null,
+              h('tr', { style: { background: C.pageBg }},
+                ['KPI', 'Formula', 'Type', 'Healthy Range'].map(function(x) {
+                  return h('th', { key: x, style: { padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: C.inkMid, fontSize: 11, textTransform: 'uppercase', letterSpacing: '.05em' }}, x);
+                })
+              )
+            ),
+            h('tbody', null,
+              [
+                ['MS Value %',      'Brand Sales Value ÷ Category Sales Value × 100',   'Additive',     'Track vs LY'],
+                ['MS Volume %',     'Brand Units ÷ Category Units × 100',               'Additive',     'Track vs LY'],
+                ['Purchase Share',  'Brand Purchase ÷ Category Purchase × 100',         'Additive',     '—'],
+                ['SOTS %',          'Brand Stock ÷ Category Stock × 100',               'Additive',     'Track vs MS'],
+                ['WD %',            'Weighted Distribution from Nielsen',               'Non-additive', 'Higher = better'],
+                ['SPPD',            'Sales Value ÷ WD%',                                'Non-additive', 'Category velocity'],
+                ['SAH',             'MS Value% ÷ WD%',                                  'Non-additive', '0.20 – 0.40'],
+                ['RR',              'Purchase Share ÷ MS Value',                        'Non-additive', '0.85 – 1.15'],
+                ['DQI',             'WD ÷ ND',                                          'Non-additive', '> 1.0 = ideal']
+              ].map(function(row, i) {
+                return h('tr', { key: i, style: { borderBottom: '1px solid ' + C.border }},
+                  h('td', { style: { padding: '10px 14px', fontWeight: 700, color: C.ink }}, row[0]),
+                  h('td', { style: { padding: '10px 14px', color: C.inkMid, fontFamily: 'ui-monospace, Menlo, monospace', fontSize: 11 }}, row[1]),
+                  h('td', { style: { padding: '10px 14px' }}, h(Chip, { color: row[2] === 'Additive' ? C.chart2 : C.amber }, row[2])),
+                  h('td', { style: { padding: '10px 14px', color: C.inkLight }}, row[3])
+                );
+              })
+            )
+          )
+        ),
+
+        // Anomaly engine
+        h(Section, { icon: '◆', title: 'Anomaly Detection Engine' },
+          h('div', { style: { fontSize: 13, color: C.inkMid, lineHeight: 1.7, marginBottom: 14 }},
+            'Every monthly load triggers a scan across all brands × zones. Eight anomaly types surface automatically — no analyst prompt required.'
+          ),
+          h('table', { style: { width: '100%', borderCollapse: 'collapse', fontSize: 12 }},
+            h('thead', null,
+              h('tr', { style: { background: C.pageBg }},
+                ['Type', 'Trigger condition', 'Severity'].map(function(x) {
+                  return h('th', { key: x, style: { padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: C.inkMid, fontSize: 11, textTransform: 'uppercase', letterSpacing: '.05em' }}, x);
+                })
+              )
+            ),
+            h('tbody', null,
+              h(AnomalyRow, { type: 'Leaky Bucket',          trigger: 'MS drop >2pts + ND stable + SAH falling',         severity: 'HIGH' }),
+              h(AnomalyRow, { type: 'Competitor Surge',      trigger: 'Non-TCCC brand gains >2pts MS month-over-month',  severity: 'HIGH' }),
+              h(AnomalyRow, { type: 'Replenishment Stress',  trigger: 'RR < 0.80 (OOS risk in chilled outlets)',         severity: 'HIGH' }),
+              h(AnomalyRow, { type: 'Share Collapse',        trigger: 'MS drop >2pts YoY in any zone',                   severity: 'HIGH' }),
+              h(AnomalyRow, { type: 'Hidden Gem',            trigger: 'WD <50% + SAH >0.25 (untapped distribution)',     severity: 'MEDIUM' }),
+              h(AnomalyRow, { type: 'WD Quality Gap',        trigger: 'WD < ND trend (losing high-value outlets)',       severity: 'MEDIUM' }),
+              h(AnomalyRow, { type: 'Dilution Signal',       trigger: 'Rising WD + Falling SPPD (low-quality expansion)', severity: 'MEDIUM' }),
+              h(AnomalyRow, { type: 'New Entrant',           trigger: 'Brand appears with zero prior history',           severity: 'LOW' })
+            )
+          )
+        ),
+
+        // Tech stack
+        h(Section, { icon: '⟨⟩', title: 'Tech Stack' },
+          h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 18 }},
+            h('div', null,
+              h('div', { style: { fontSize: 11, fontWeight: 800, color: C.red, textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 10 }}, 'Backend'),
+              h(InfoRow, { label: 'Runtime',     value: 'Python 3.11' }),
+              h(InfoRow, { label: 'API',         value: 'FastAPI + Uvicorn' }),
+              h(InfoRow, { label: 'LLM (demo)',  value: 'Claude Sonnet via API' }),
+              h(InfoRow, { label: 'LLM (prod)',  value: 'Ollama · llama3.1:8b' }),
+              h(InfoRow, { label: 'Database',    value: 'DuckDB (production)' }),
+              h(InfoRow, { label: 'Vector DB',   value: 'ChromaDB (production)', last: true })
+            ),
+            h('div', null,
+              h('div', { style: { fontSize: 11, fontWeight: 800, color: C.red, textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 10 }}, 'Frontend'),
+              h(InfoRow, { label: 'Framework',   value: 'React 18 (via CDN)' }),
+              h(InfoRow, { label: 'Charts',      value: 'Recharts 2.12' }),
+              h(InfoRow, { label: 'Build step',  value: 'None · single HTML file' }),
+              h(InfoRow, { label: 'Styling',     value: 'Inline · Coca-Cola tokens' }),
+              h(InfoRow, { label: 'Deployment',  value: 'Railway · Docker' }),
+              h(InfoRow, { label: 'Distribution',value: 'Static via FastAPI', last: true })
+            )
+          )
+        ),
+
+        // Footer
+        h('div', { style: { textAlign: 'center', padding: '20px 0 30px', color: C.inkFaint, fontSize: 11, lineHeight: 1.7 }},
+          h('div', null, 'Nielsen RMS Intelligence Platform — Concept Demonstrator'),
+          h('div', null, 'Built for SLMG Pvt. Ltd. · General Trade channel · NielsenIQ CBOFBO DDR (SIMPL)')
+        )
+      );
+    }
+
     var NAV = [
       { id: 'portfolio', label: 'Portfolio',  icon: '◈' },
       { id: 'brand',     label: 'Brand Dive', icon: '◎' },
       { id: 'geo',       label: 'Geography',  icon: '◉' },
       { id: 'anomalies', label: 'Anomalies',  icon: '◆' },
-      { id: 'chat',      label: 'AI Analyst', icon: '◇' }
+      { id: 'chat',      label: 'AI Analyst', icon: '◇' },
+      { id: 'about',     label: 'About',      icon: 'ⓘ' }
     ];
 
     function App() {
@@ -543,7 +804,8 @@
           view === 'brand'     && h(BrandDive, { periods: periods.filter(function(p) { return p.indexOf('YTD') === -1; }), brands: brands }),
           view === 'geo'       && h(Geography, { period: period }),
           view === 'anomalies' && h(Anomalies, { period: period }),
-          view === 'chat'      && h(Chatbot)
+          view === 'chat'      && h(Chatbot),
+          view === 'about'     && h(About)
         )
       );
     }
