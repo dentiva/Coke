@@ -399,7 +399,7 @@
     }
 
     function Chatbot() {
-      var ms = useState([{ role: 'assistant', content: "Hello — I'm the Nielsen RMS AI Analyst for SLMG. I answer questions using only the current report snapshot. Ask me about market share, distribution gaps, anomalies, or competitive dynamics." }]);
+      var ms = useState([{ role: 'assistant', content: "Hello — I'm the AI Analyst for Nielson report. I answer questions using only the current report snapshot. Ask me about market share, distribution gaps, anomalies, or competitive dynamics." }]);
       var msgs = ms[0], setMsgs = ms[1];
       var ins = useState(''), input = ins[0], setInput = ins[1];
       var ls = useState(false), loading = ls[0], setLoading = ls[1];
@@ -508,10 +508,10 @@
           h('div', { style: { position: 'absolute', right: 40, bottom: -60, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }}),
           h('div', { style: { position: 'relative' }},
             h('div', { style: { fontSize: 10, fontWeight: 800, letterSpacing: '.12em', opacity: 0.85, marginBottom: 8 }}, 'LIVE CONCEPT DEMONSTRATOR'),
-            h('div', { style: { fontSize: 22, fontWeight: 800, letterSpacing: '-.02em', marginBottom: 10 }}, 'Nielsen RMS Intelligence Platform'),
+            h('div', { style: { fontSize: 22, fontWeight: 800, letterSpacing: '-.02em', marginBottom: 10 }}, 'NielsenIQ Intelligence Platform'),
             h('div', { style: { fontSize: 13, opacity: 0.92, lineHeight: 1.7, maxWidth: 620 }}, 'Turns Nielsen monthly retail measurement into real-time answers — KPIs computed deterministically, anomalies detected automatically, and an AI analyst that answers natural-language questions strictly from the report data.'),
             h('div', { style: { marginTop: 14, display: 'flex', gap: 8, flexWrap: 'wrap' }},
-              h('span', { style: { padding: '4px 10px', background: 'rgba(255,255,255,0.18)', borderRadius: 4, fontSize: 11, fontWeight: 700, letterSpacing: '.04em' }}, 'SLMG Pvt. Ltd.'),
+              h('span', { style: { padding: '4px 10px', background: 'rgba(255,255,255,0.18)', borderRadius: 4, fontSize: 11, fontWeight: 700, letterSpacing: '.04em' }}, 'SLMG'),
               h('span', { style: { padding: '4px 10px', background: 'rgba(255,255,255,0.18)', borderRadius: 4, fontSize: 11, fontWeight: 700, letterSpacing: '.04em' }}, 'General Trade'),
               h('span', { style: { padding: '4px 10px', background: 'rgba(255,255,255,0.18)', borderRadius: 4, fontSize: 11, fontWeight: 700, letterSpacing: '.04em' }}, 'UP + Bihar'),
               h('span', { style: { padding: '4px 10px', background: 'rgba(255,255,255,0.18)', borderRadius: 4, fontSize: 11, fontWeight: 700, letterSpacing: '.04em' }}, 'NielsenIQ CBOFBO DDR')
@@ -691,20 +691,20 @@
           h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 18 }},
             h('div', null,
               h('div', { style: { fontSize: 11, fontWeight: 800, color: C.red, textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 10 }}, 'Backend'),
-              h(InfoRow, { label: 'Runtime',     value: 'Python 3.11' }),
-              h(InfoRow, { label: 'API',         value: 'FastAPI + Uvicorn' }),
+              h(InfoRow, { label: 'Runtime',     value: 'Python' }),
+              h(InfoRow, { label: 'API',         value: 'FastAPI' }),
               h(InfoRow, { label: 'LLM (demo)',  value: 'Claude Sonnet via API' }),
-              h(InfoRow, { label: 'LLM (prod)',  value: 'Ollama · llama3.1:8b' }),
+              h(InfoRow, { label: 'LLM (prod)',  value: 'Ollama' }),
               h(InfoRow, { label: 'Database',    value: 'DuckDB (production)' }),
               h(InfoRow, { label: 'Vector DB',   value: 'ChromaDB (production)', last: true })
             ),
             h('div', null,
               h('div', { style: { fontSize: 11, fontWeight: 800, color: C.red, textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 10 }}, 'Frontend'),
               h(InfoRow, { label: 'Framework',   value: 'React 18 (via CDN)' }),
-              h(InfoRow, { label: 'Charts',      value: 'Recharts 2.12' }),
+              h(InfoRow, { label: 'Charts',      value: 'Recharts' }),
               h(InfoRow, { label: 'Build step',  value: 'None · single HTML file' }),
               h(InfoRow, { label: 'Styling',     value: 'Inline · Coca-Cola tokens' }),
-              h(InfoRow, { label: 'Deployment',  value: 'Railway · Docker' }),
+              h(InfoRow, { label: 'Deployment',  value: 'Railway · Docker for the Demo' }),
               h(InfoRow, { label: 'Distribution',value: 'Static via FastAPI', last: true })
             )
           )
@@ -712,8 +712,8 @@
 
         // Footer
         h('div', { style: { textAlign: 'center', padding: '20px 0 30px', color: C.inkFaint, fontSize: 11, lineHeight: 1.7 }},
-          h('div', null, 'Nielsen RMS Intelligence Platform — Concept Demonstrator'),
-          h('div', null, 'Built for SLMG Pvt. Ltd. · General Trade channel · NielsenIQ CBOFBO DDR (SIMPL)')
+          h('div', null, 'NielsenIQ — Concept Demonstrator by Altius Soft'),
+          h('div', null, 'Built by Altius Soft for Coca Cola')
         )
       );
     }
